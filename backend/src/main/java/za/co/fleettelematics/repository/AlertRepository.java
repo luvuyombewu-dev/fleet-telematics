@@ -1,0 +1,17 @@
+package za.co.fleettelematics.repository;
+
+import za.co.fleettelematics.entity.Alert;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface AlertRepository extends JpaRepository<Alert, Long> {
+
+    List<Alert> findByVehicleId(Long vehicleId);
+
+    List<Alert> findByDriverId(Long driverId);
+
+    List<Alert> findByStatus(String status);
+
+    List<Alert> findBySeverity(String severity);
+}
