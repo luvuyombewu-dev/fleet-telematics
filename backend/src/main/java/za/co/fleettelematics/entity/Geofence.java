@@ -36,7 +36,7 @@ public class Geofence {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
-    protected Geofence() {
+    public Geofence() {
     }
 
     @PrePersist

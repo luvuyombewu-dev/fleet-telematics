@@ -28,7 +28,7 @@ public class TripPoint {
     @Column(name = "recorded_at", nullable = false)
     private OffsetDateTime recordedAt;
 
-    protected TripPoint() {
+    public TripPoint() {
     }
 
     public Long getId() {

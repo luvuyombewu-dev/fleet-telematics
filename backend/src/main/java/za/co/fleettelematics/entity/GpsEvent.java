@@ -40,7 +40,7 @@ public class GpsEvent {
     @Column(name = "recorded_at", nullable = false)
     private OffsetDateTime recordedAt;
 
-    protected GpsEvent() {
+    public GpsEvent() {
     }
 
     @PrePersist

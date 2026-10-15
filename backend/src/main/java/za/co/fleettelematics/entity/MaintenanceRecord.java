@@ -46,7 +46,7 @@ public class MaintenanceRecord {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
-    protected MaintenanceRecord() {
+    public MaintenanceRecord() {
     }
 
     @PrePersist

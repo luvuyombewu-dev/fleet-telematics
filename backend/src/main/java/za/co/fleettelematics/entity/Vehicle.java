@@ -54,7 +54,7 @@ public class Vehicle {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
-    protected Vehicle() {
+    public Vehicle() {
     }
 
     @PrePersist

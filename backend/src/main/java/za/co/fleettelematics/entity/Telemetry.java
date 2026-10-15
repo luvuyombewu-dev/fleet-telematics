@@ -47,7 +47,7 @@ public class Telemetry {
     @Column(name = "recorded_at", nullable = false)
     private OffsetDateTime recordedAt;
 
-    protected Telemetry() {
+    public Telemetry() {
     }
 
     public Long getId() {

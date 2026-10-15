@@ -28,7 +28,7 @@ public class DriverAssignment {
     @Column(nullable = false, length = 30)
     private String status = "ACTIVE";
 
-    protected DriverAssignment() {
+    public DriverAssignment() {
     }
 
     @PrePersist

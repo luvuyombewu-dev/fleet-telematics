@@ -53,7 +53,7 @@ public class Trip {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
-    protected Trip() {
+    public Trip() {
     }
 
     @PrePersist
