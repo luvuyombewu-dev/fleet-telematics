@@ -1,6 +1,7 @@
 package za.co.fleettelematics;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -15,7 +16,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -42,7 +45,6 @@ class FleetApiIntegrationTests {
                 "/api/v1/maintenance-records",
                 "/api/v1/geofences",
                 "/api/v1/audit-logs");
-
         for (String path : paths) {
             try {
                 assertJsonArray(path);
@@ -63,11 +65,10 @@ class FleetApiIntegrationTests {
                 {"SELECT id FROM maintenance_records ORDER BY id LIMIT 1", "/api/v1/maintenance-records/"},
                 {"SELECT id FROM geofences ORDER BY id LIMIT 1", "/api/v1/geofences/"}
         };
-
         for (String[] endpoint : endpoints) {
             String path = endpoint[1] + firstId(endpoint[0]);
             try {
-                mockMvc.perform(get(path).accept(MediaType.APPLICATION_JSON))
+                mockMvc.perform(asAdmin(get(path).accept(MediaType.APPLICATION_JSON)))
                         .andExpect(status().isOk())
                         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                         .andExpect(jsonPath("$.id").isNotEmpty());
@@ -80,9 +81,8 @@ class FleetApiIntegrationTests {
     @Test
     void latestTelemetryEndpointReturnsARecordedSample() throws Exception {
         Long vehicleId = firstId("SELECT vehicle_id FROM telemetry ORDER BY id LIMIT 1");
-
-        mockMvc.perform(get("/api/v1/telemetry/vehicle/{vehicleId}/latest", vehicleId)
-                        .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(asAdmin(get("/api/v1/telemetry/vehicle/{vehicleId}/latest", vehicleId)
+                        .accept(MediaType.APPLICATION_JSON)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").isNotEmpty())
@@ -91,8 +91,8 @@ class FleetApiIntegrationTests {
 
     @Test
     void unknownVehicleReturnsStructuredNotFoundResponse() throws Exception {
-        mockMvc.perform(get("/api/v1/vehicles/{id}", Long.MAX_VALUE)
-                        .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(asAdmin(get("/api/v1/vehicles/{id}", Long.MAX_VALUE)
+                        .accept(MediaType.APPLICATION_JSON)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").isNotEmpty());
@@ -100,10 +100,10 @@ class FleetApiIntegrationTests {
 
     @Test
     void invalidVehicleRequestIsRejectedWithBadRequest() throws Exception {
-        mockMvc.perform(post("/api/v1/vehicles")
+        mockMvc.perform(asAdmin(post("/api/v1/vehicles")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+                        .content("{}")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.message").value("Request validation failed."))
@@ -111,10 +111,14 @@ class FleetApiIntegrationTests {
     }
 
     private void assertJsonArray(String path) throws Exception {
-        mockMvc.perform(get(path).accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(asAdmin(get(path).accept(MediaType.APPLICATION_JSON)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray());
+    }
+
+    private MockHttpServletRequestBuilder asAdmin(MockHttpServletRequestBuilder request) {
+        return request.with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")));
     }
 
     private Long firstId(String sql) {
