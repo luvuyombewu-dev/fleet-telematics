@@ -24,5 +24,8 @@ public class DriverAssignmentController {
     @PostMapping public ResponseEntity<DriverAssignmentResponse> assign(@Valid @RequestBody DriverAssignmentRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.assign(request));
     }
+    @PutMapping("/{id}") public DriverAssignmentResponse update(@PathVariable Long id, @Valid @RequestBody DriverAssignmentRequest request) {
+        return service.update(id, request);
+    }
     @PostMapping("/{id}/unassign") public DriverAssignmentResponse unassign(@PathVariable Long id) { return service.unassign(id); }
 }

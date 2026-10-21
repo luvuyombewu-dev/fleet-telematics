@@ -8,9 +8,11 @@ import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -41,6 +43,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleConflict(DataIntegrityViolationException exception) {
         return build(HttpStatus.CONFLICT,
                 "The request conflicts with existing data or a database relationship constraint.");
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthentication(AuthenticationException exception) {
+        return build(HttpStatus.UNAUTHORIZED,
+                "Invalid username or password, or the account is not active.");
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException exception) {
+        HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
+        String message = exception.getReason() == null ? status.getReasonPhrase() : exception.getReason();
+        return build(status, message);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

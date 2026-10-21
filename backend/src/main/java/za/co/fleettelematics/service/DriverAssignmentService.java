@@ -58,6 +58,20 @@ public class DriverAssignmentService {
         return toResponse(assignmentRepository.save(assignment));
     }
 
+    public DriverAssignmentResponse update(Long id, DriverAssignmentRequest request) {
+        DriverAssignment assignment = getEntity(id);
+        if (!"ACTIVE".equalsIgnoreCase(assignment.getStatus())) {
+            throw new IllegalArgumentException("Only an active assignment can be edited.");
+        }
+        Driver driver = driverRepository.findById(request.getDriverId())
+                .orElseThrow(() -> new ResourceNotFoundException("Driver", request.getDriverId()));
+        Vehicle vehicle = vehicleRepository.findById(request.getVehicleId())
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle", request.getVehicleId()));
+        assignment.setDriver(driver);
+        assignment.setVehicle(vehicle);
+        return toResponse(assignmentRepository.save(assignment));
+    }
+
     public DriverAssignmentResponse unassign(Long id) {
         DriverAssignment assignment = getEntity(id);
         if (!"ACTIVE".equalsIgnoreCase(assignment.getStatus())) {

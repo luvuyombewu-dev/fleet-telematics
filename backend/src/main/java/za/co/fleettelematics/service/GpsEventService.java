@@ -46,6 +46,29 @@ public class GpsEventService {
         return toResponse(gpsEventRepository.save(event));
     }
 
+    public GpsEventResponse update(Long id, GpsEventRequest request) {
+        GpsEvent event = gpsEventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("GPS event", id));
+        Vehicle vehicle = vehicleRepository.findById(request.getVehicleId())
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle", request.getVehicleId()));
+        Driver driver = request.getDriverId() == null ? null : driverRepository.findById(request.getDriverId())
+                .orElseThrow(() -> new ResourceNotFoundException("Driver", request.getDriverId()));
+        event.setVehicle(vehicle);
+        event.setDriver(driver);
+        event.setEventType(request.getEventType());
+        event.setLatitude(request.getLatitude());
+        event.setLongitude(request.getLongitude());
+        event.setMetadata(request.getMetadata());
+        if (request.getRecordedAt() != null) event.setRecordedAt(request.getRecordedAt());
+        return toResponse(gpsEventRepository.save(event));
+    }
+
+    public void delete(Long id) {
+        GpsEvent event = gpsEventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("GPS event", id));
+        gpsEventRepository.delete(event);
+    }
+
     @Transactional(readOnly = true)
     public List<GpsEventResponse> findAll() {
         return gpsEventRepository.findAll().stream().map(this::toResponse).toList();

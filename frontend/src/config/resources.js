@@ -5,7 +5,7 @@ const activeStatus = { type: 'select', options: ['ACTIVE', 'INACTIVE', 'SUSPENDE
 
 export const resourceConfig = {
   vehicles: {
-    title: 'Vehicles', eyebrow: 'Fleet management', description: 'Manage fleet assets, tracking devices and vehicle status.', endpoint: '/vehicles',
+    title: 'Vehicles', eyebrow: 'Fleet management', description: 'Manage fleet assets, tracking devices and vehicle status.', endpoint: '/vehicles', editable: true, singular: 'Vehicle',
     icon: Truck, createRoles: ['ADMIN', 'FLEET_MANAGER', 'DISPATCHER'], canDelete: true,
     columns: [
       { key: 'registrationNumber', label: 'Registration', primary: true }, { key: 'fleetNumber', label: 'Fleet ID' },
@@ -13,18 +13,18 @@ export const resourceConfig = {
       { key: 'trackingStatus', label: 'Tracking', type: 'status' }, { key: 'status', label: 'Status', type: 'status' },
     ],
     fields: [
-      field('registrationNumber', 'Registration number', 'text', { required: true }), field('fleetNumber', 'Fleet number'),
+      field('registrationNumber', 'Registration number', 'text', { required: true }),
       field('vin', 'VIN / chassis number'), field('make', 'Make', 'text', { required: true }), field('model', 'Model', 'text', { required: true }),
       field('vehicleYear', 'Vehicle year', 'number', { min: 1900, max: 2100 }),
       field('vehicleType', 'Vehicle type', 'select', { required: true, options: ['TRUCK', 'VAN', 'CAR', 'BUS', 'TRAILER', 'OTHER'], defaultValue: 'TRUCK' }),
       field('fuelType', 'Fuel type', 'select', { required: true, options: ['DIESEL', 'PETROL', 'ELECTRIC', 'HYBRID', 'OTHER'], defaultValue: 'DIESEL' }),
       field('mileage', 'Mileage (km)', 'number', { min: 0, step: '0.1', defaultValue: '0' }),
-      field('deviceId', 'Tracking device ID'), field('status', 'Vehicle status', 'select', activeStatus),
+      field('status', 'Vehicle status', 'select', activeStatus),
       field('trackingStatus', 'Tracking status', 'select', { options: ['ONLINE', 'OFFLINE'], defaultValue: 'OFFLINE' }),
     ],
   },
   drivers: {
-    title: 'Drivers', eyebrow: 'People and assignments', description: 'Manage driver profiles, licence information and availability.', endpoint: '/drivers',
+    title: 'Drivers', eyebrow: 'People and assignments', description: 'Manage driver profiles, licence information and availability.', endpoint: '/drivers', editable: true, singular: 'Driver',
     icon: Users, createRoles: ['ADMIN', 'FLEET_MANAGER', 'DISPATCHER'], canDelete: true,
     columns: [
       { key: 'employeeNumber', label: 'Employee ID', primary: true }, { key: 'firstName', label: 'First name' }, { key: 'lastName', label: 'Last name' },
@@ -38,19 +38,19 @@ export const resourceConfig = {
     ],
   },
   assignments: {
-    title: 'Driver assignments', eyebrow: 'People and assignments', description: 'Review current driver-to-vehicle assignments and unassign vehicles when needed.', endpoint: '/driver-assignments',
+    title: 'Driver assignments', eyebrow: 'People and assignments', description: 'Review current driver-to-vehicle assignments and unassign vehicles when needed.', endpoint: '/driver-assignments', editable: true, singular: 'Driver assignment',
     icon: ClipboardList, createRoles: ['ADMIN', 'FLEET_MANAGER', 'DISPATCHER'],
     columns: [
       { key: 'id', label: 'Assignment ID', primary: true }, { key: 'driverId', label: 'Driver ID' }, { key: 'vehicleId', label: 'Vehicle ID' },
       { key: 'assignedAt', label: 'Assigned', type: 'datetime' }, { key: 'unassignedAt', label: 'Unassigned', type: 'datetime' }, { key: 'status', label: 'Status', type: 'status' },
     ],
-    fields: [field('driverId', 'Driver ID', 'number', { required: true, min: 1 }), field('vehicleId', 'Vehicle ID', 'number', { required: true, min: 1 })],
+    fields: [field('driverId', 'Driver', 'relation', { required: true, optionsEndpoint: '/drivers', labelFields: ['firstName', 'lastName', 'employeeNumber'] }), field('vehicleId', 'Vehicle', 'relation', { required: true, optionsEndpoint: '/vehicles', labelFields: ['registrationNumber', 'fleetNumber', 'make', 'model'] })],
     actions: [
       { label: 'Unassign', method: 'POST', path: row => `/driver-assignments/${row.id}/unassign`, roles: ['ADMIN', 'FLEET_MANAGER', 'DISPATCHER'], when: row => String(row.status || '').toUpperCase() === 'ACTIVE', variant: 'secondary' },
     ],
   },
   trips: {
-    title: 'Trips', eyebrow: 'Operations', description: 'Review scheduled and completed trips, routes and recorded journey metrics.', endpoint: '/trips',
+    title: 'Trips', eyebrow: 'Operations', description: 'Review scheduled and completed trips, routes and recorded journey metrics.', endpoint: '/trips', editable: true, singular: 'Trip',
     icon: Route, createRoles: ['ADMIN', 'FLEET_MANAGER', 'DISPATCHER'], canDelete: true,
     columns: [
       { key: 'id', label: 'Trip ID', primary: true }, { key: 'vehicleId', label: 'Vehicle ID' }, { key: 'driverId', label: 'Driver ID' },
@@ -58,20 +58,20 @@ export const resourceConfig = {
       { key: 'distanceKm', label: 'Distance (km)' }, { key: 'status', label: 'Status', type: 'status' },
     ],
     fields: [
-      field('vehicleId', 'Vehicle ID', 'number', { required: true, min: 1 }), field('driverId', 'Driver ID', 'number', { min: 1 }),
+      field('vehicleId', 'Vehicle', 'relation', { required: true, optionsEndpoint: '/vehicles', labelFields: ['registrationNumber', 'fleetNumber', 'make', 'model'] }), field('driverId', 'Driver (optional)', 'relation', { optionsEndpoint: '/drivers', labelFields: ['firstName', 'lastName', 'employeeNumber'], emptyLabel: 'No driver selected' }),
       field('startTime', 'Start time', 'datetime-local', { required: true }), field('endTime', 'End time', 'datetime-local'),
       field('startLocation', 'Start location'), field('destination', 'Destination'), field('status', 'Trip status', 'select', { options: ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'], defaultValue: 'SCHEDULED' }),
     ],
   },
   alerts: {
-    title: 'Alerts', eyebrow: 'Monitoring', description: 'Review fleet alerts and acknowledge or resolve active incidents.', endpoint: '/alerts',
+    title: 'Alerts', eyebrow: 'Monitoring', description: 'Review fleet alerts and acknowledge or resolve active incidents.', endpoint: '/alerts', editable: true, singular: 'Alert',
     icon: BellRing, createRoles: ['ADMIN', 'FLEET_MANAGER', 'DISPATCHER'],
     columns: [
       { key: 'id', label: 'Alert ID', primary: true }, { key: 'alertType', label: 'Type' }, { key: 'description', label: 'Description' },
       { key: 'severity', label: 'Severity', type: 'status' }, { key: 'vehicleId', label: 'Vehicle ID' }, { key: 'createdAt', label: 'Created', type: 'datetime' }, { key: 'status', label: 'Status', type: 'status' },
     ],
     fields: [
-      field('vehicleId', 'Vehicle ID', 'number', { required: true, min: 1 }), field('driverId', 'Driver ID', 'number', { min: 1 }),
+      field('vehicleId', 'Vehicle', 'relation', { required: true, optionsEndpoint: '/vehicles', labelFields: ['registrationNumber', 'fleetNumber', 'make', 'model'] }), field('driverId', 'Driver (optional)', 'relation', { optionsEndpoint: '/drivers', labelFields: ['firstName', 'lastName', 'employeeNumber'], emptyLabel: 'No driver selected' }),
       field('alertType', 'Alert type', 'text', { required: true, placeholder: 'e.g. SPEEDING' }),
       field('severity', 'Severity', 'select', { options: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'], defaultValue: 'MEDIUM' }),
       field('description', 'Description', 'textarea', { required: true, full: true }), field('latitude', 'Latitude', 'number', { min: -90, max: 90, step: 'any' }),
@@ -83,7 +83,7 @@ export const resourceConfig = {
     ],
   },
   maintenance: {
-    title: 'Maintenance', eyebrow: 'Asset health', description: 'Track scheduled services, completed work and maintenance costs.', endpoint: '/maintenance-records',
+    title: 'Maintenance', eyebrow: 'Asset health', description: 'Track scheduled services, completed work and maintenance costs.', endpoint: '/maintenance-records', editable: true, singular: 'Maintenance record',
     icon: Wrench, createRoles: ['ADMIN', 'FLEET_MANAGER', 'MAINTENANCE_MANAGER'], canDelete: true,
     columns: [
       { key: 'id', label: 'Record ID', primary: true }, { key: 'vehicleId', label: 'Vehicle ID' }, { key: 'maintenanceType', label: 'Service type' },
@@ -91,14 +91,14 @@ export const resourceConfig = {
       { key: 'cost', label: 'Cost (R)', type: 'currency' }, { key: 'status', label: 'Status', type: 'status' },
     ],
     fields: [
-      field('vehicleId', 'Vehicle ID', 'number', { required: true, min: 1 }), field('maintenanceType', 'Maintenance type', 'text', { required: true }),
+      field('vehicleId', 'Vehicle', 'relation', { required: true, optionsEndpoint: '/vehicles', labelFields: ['registrationNumber', 'fleetNumber', 'make', 'model'] }), field('maintenanceType', 'Maintenance type', 'text', { required: true }),
       field('description', 'Description', 'textarea', { full: true }), field('scheduledDate', 'Scheduled date', 'date'), field('completedDate', 'Completed date', 'date'),
       field('serviceMileage', 'Service mileage (km)', 'number', { min: 0, step: '0.1' }), field('cost', 'Cost (R)', 'number', { min: 0, step: '0.01' }),
       field('status', 'Status', 'select', { options: ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'], defaultValue: 'SCHEDULED' }), field('notes', 'Notes', 'textarea', { full: true }),
     ],
   },
   geofences: {
-    title: 'Geofences', eyebrow: 'Location controls', description: 'Define operational areas using a centre coordinate and radius in metres.', endpoint: '/geofences',
+    title: 'Geofences', eyebrow: 'Location controls', description: 'Define operational areas using a centre coordinate and radius in metres.', endpoint: '/geofences', editable: true, singular: 'Geofence',
     icon: MapPin, createRoles: ['ADMIN', 'FLEET_MANAGER', 'DISPATCHER'], canDelete: true,
     columns: [
       { key: 'id', label: 'ID', primary: true }, { key: 'name', label: 'Geofence name' }, { key: 'latitude', label: 'Latitude' },
@@ -113,14 +113,14 @@ export const resourceConfig = {
     ],
   },
   'gps-events': {
-    title: 'GPS events', eyebrow: 'Monitoring', description: 'Inspect GPS event records reported by devices and fleet operations.', endpoint: '/gps-events',
+    title: 'GPS events', eyebrow: 'Monitoring', description: 'Inspect GPS event records reported by devices and fleet operations.', endpoint: '/gps-events', editable: true, singular: 'GPS event', canDelete: true,
     icon: Activity, createRoles: ['ADMIN', 'FLEET_MANAGER', 'DISPATCHER'],
     columns: [
       { key: 'id', label: 'Event ID', primary: true }, { key: 'eventType', label: 'Event type' }, { key: 'vehicleId', label: 'Vehicle ID' },
       { key: 'driverId', label: 'Driver ID' }, { key: 'latitude', label: 'Latitude' }, { key: 'longitude', label: 'Longitude' }, { key: 'recordedAt', label: 'Recorded', type: 'datetime' },
     ],
     fields: [
-      field('vehicleId', 'Vehicle ID', 'number', { required: true, min: 1 }), field('driverId', 'Driver ID', 'number', { min: 1 }),
+      field('vehicleId', 'Vehicle', 'relation', { required: true, optionsEndpoint: '/vehicles', labelFields: ['registrationNumber', 'fleetNumber', 'make', 'model'] }), field('driverId', 'Driver (optional)', 'relation', { optionsEndpoint: '/drivers', labelFields: ['firstName', 'lastName', 'employeeNumber'], emptyLabel: 'No driver selected' }),
       field('eventType', 'Event type', 'text', { required: true, placeholder: 'e.g. IGNITION_ON' }),
       field('latitude', 'Latitude', 'number', { required: true, min: -90, max: 90, step: 'any' }),
       field('longitude', 'Longitude', 'number', { required: true, min: -180, max: 180, step: 'any' }),

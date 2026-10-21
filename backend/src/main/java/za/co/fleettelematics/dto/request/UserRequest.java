@@ -2,6 +2,7 @@ package za.co.fleettelematics.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class UserRequest {
@@ -16,11 +17,15 @@ public class UserRequest {
     private String email;
 
     @NotBlank
+    @Size(min = 12, max = 72)
     private String password;
 
     @NotBlank
+    @Pattern(regexp = "ADMIN|FLEET_MANAGER|DISPATCHER|MAINTENANCE_MANAGER|DRIVER|MANAGEMENT",
+            flags = Pattern.Flag.CASE_INSENSITIVE)
     private String role;
 
+    @Pattern(regexp = "ACTIVE|INACTIVE|SUSPENDED", flags = Pattern.Flag.CASE_INSENSITIVE)
     private String status;
 
     public String getUsername() { return username; }
