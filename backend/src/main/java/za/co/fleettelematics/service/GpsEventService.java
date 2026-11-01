@@ -1,5 +1,6 @@
 package za.co.fleettelematics.service;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -22,12 +23,14 @@ public class GpsEventService {
     private final GpsEventRepository gpsEventRepository;
     private final VehicleRepository vehicleRepository;
     private final DriverRepository driverRepository;
+    private final VehicleLocationService vehicleLocationService;
 
     public GpsEventService(GpsEventRepository gpsEventRepository, VehicleRepository vehicleRepository,
-                           DriverRepository driverRepository) {
+                           DriverRepository driverRepository, VehicleLocationService vehicleLocationService) {
         this.gpsEventRepository = gpsEventRepository;
         this.vehicleRepository = vehicleRepository;
         this.driverRepository = driverRepository;
+        this.vehicleLocationService = vehicleLocationService;
     }
 
     public GpsEventResponse create(GpsEventRequest request) {
@@ -35,12 +38,23 @@ public class GpsEventService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", request.getVehicleId()));
         Driver driver = request.getDriverId() == null ? null : driverRepository.findById(request.getDriverId())
                 .orElseThrow(() -> new ResourceNotFoundException("Driver", request.getDriverId()));
+
+        BigDecimal latitude = request.getLatitude();
+        BigDecimal longitude = request.getLongitude();
+        if (latitude == null && longitude == null) {
+            VehicleLocationService.Position position = vehicleLocationService.requireLatestPosition(vehicle.getId());
+            latitude = position.latitude();
+            longitude = position.longitude();
+        } else if (latitude == null || longitude == null) {
+            throw new IllegalArgumentException("Latitude and longitude must either both be supplied or both be omitted.");
+        }
+
         GpsEvent event = new GpsEvent();
         event.setVehicle(vehicle);
         event.setDriver(driver);
         event.setEventType(request.getEventType());
-        event.setLatitude(request.getLatitude());
-        event.setLongitude(request.getLongitude());
+        event.setLatitude(latitude);
+        event.setLongitude(longitude);
         event.setMetadata(request.getMetadata());
         event.setRecordedAt(request.getRecordedAt() == null ? OffsetDateTime.now() : request.getRecordedAt());
         return toResponse(gpsEventRepository.save(event));
@@ -53,11 +67,18 @@ public class GpsEventService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", request.getVehicleId()));
         Driver driver = request.getDriverId() == null ? null : driverRepository.findById(request.getDriverId())
                 .orElseThrow(() -> new ResourceNotFoundException("Driver", request.getDriverId()));
+
+        if ((request.getLatitude() == null) != (request.getLongitude() == null)) {
+            throw new IllegalArgumentException("Latitude and longitude must either both be supplied or both be omitted.");
+        }
         event.setVehicle(vehicle);
         event.setDriver(driver);
         event.setEventType(request.getEventType());
-        event.setLatitude(request.getLatitude());
-        event.setLongitude(request.getLongitude());
+        // Omitting coordinates during an edit preserves the historical event position.
+        if (request.getLatitude() != null) {
+            event.setLatitude(request.getLatitude());
+            event.setLongitude(request.getLongitude());
+        }
         event.setMetadata(request.getMetadata());
         if (request.getRecordedAt() != null) event.setRecordedAt(request.getRecordedAt());
         return toResponse(gpsEventRepository.save(event));
