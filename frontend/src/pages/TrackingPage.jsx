@@ -18,6 +18,11 @@ export default function TrackingPage() {
   const [loadingVehicles, setLoadingVehicles] = useState(true);
   const [loadingTelemetry, setLoadingTelemetry] = useState(false);
   const [error, setError] = useState('');
+  const handleSimulatorSample = useCallback((sample) => {
+    setLatest(sample);
+    setHistory((current) => [sample, ...current.filter((item) => item.id !== sample.id)].slice(0, 100));
+    setError('');
+  }, []);
 
   useEffect(() => {
     apiRequest('/vehicles').then((list) => {
@@ -59,7 +64,7 @@ export default function TrackingPage() {
   return <div className="page-stack">
     <section className="page-heading"><div><span className="eyebrow">MONITORING / TELEMETRY</span><h1>Live fleet tracking</h1><p>Inspect the latest recorded position and telemetry history for a selected vehicle.</p></div><button className="button button-secondary" onClick={loadTelemetry} disabled={!selectedId || loadingTelemetry}><RefreshCw size={16} className={loadingTelemetry ? 'spin' : ''} />Refresh telemetry</button></section>
     <section className="panel tracking-selector"><div className="tracking-selector-label"><div className="quick-icon blue"><Truck size={19} /></div><div><strong>Selected vehicle</strong><span>Choose a vehicle to inspect its latest reading</span></div></div><div className="select-wrap vehicle-select"><select value={selectedId} disabled={loadingVehicles || !vehicles.length} onChange={(event) => setSelectedId(event.target.value)} aria-label="Select vehicle">{loadingVehicles && <option value="">Loading vehicles…</option>}{!loadingVehicles && vehicles.length === 0 && <option value="">No vehicles available</option>}{vehicles.map((item) => <option value={String(item.id)} key={item.id}>{item.registrationNumber || `Vehicle ${item.id}`} · {item.make || ''} {item.model || ''}</option>)}</select></div></section>
-    <GpsSimulator vehicleId={selectedId} onSample={(sample) => { setLatest(sample); setHistory((current) => [sample, ...current.filter((item) => item.id !== sample.id)].slice(0, 100)); setError(''); }} />
+    <GpsSimulator vehicleId={selectedId} onSample={handleSimulatorSample} />
     {error && <div className="inline-notice"><Activity size={17} /><div><strong>Telemetry unavailable</strong><span>{error}</span></div></div>}
     <section className="tracking-grid">
       <article className="panel map-panel"><div className="panel-header"><div><span className="eyebrow">LAST KNOWN POSITION</span><h2>{vehicle?.registrationNumber || (selectedId ? `Vehicle ${selectedId}` : 'Vehicle position')}</h2></div>{latest && <StatusPill value={latest.ignitionStatus ? 'ONLINE' : 'OFFLINE'} />}</div>
