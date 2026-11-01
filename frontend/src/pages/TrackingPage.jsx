@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Activity, BatteryCharging, Clock3, Fuel, Gauge, LoaderCircle, MapPin, Navigation, RefreshCw, Truck, Wifi, WifiOff } from 'lucide-react';
 import { apiRequest } from '../lib/api.js';
 import StatusPill from '../components/StatusPill.jsx';
+import GpsSimulator from '../components/GpsSimulator.jsx';
 
 const dateText = (value) => value ? new Date(value).toLocaleString() : '—';
 
@@ -53,6 +54,7 @@ export default function TrackingPage() {
   return <div className="page-stack">
     <section className="page-heading"><div><span className="eyebrow">MONITORING / TELEMETRY</span><h1>Live fleet tracking</h1><p>Inspect the latest recorded position and telemetry history for a selected vehicle.</p></div><button className="button button-secondary" onClick={loadTelemetry} disabled={!selectedId || loadingTelemetry}><RefreshCw size={16} className={loadingTelemetry ? 'spin' : ''} />Refresh telemetry</button></section>
     <section className="panel tracking-selector"><div className="tracking-selector-label"><div className="quick-icon blue"><Truck size={19} /></div><div><strong>Selected vehicle</strong><span>Choose a vehicle to inspect its latest reading</span></div></div><div className="select-wrap vehicle-select"><select value={selectedId} disabled={loadingVehicles || !vehicles.length} onChange={(event) => setSelectedId(event.target.value)} aria-label="Select vehicle">{loadingVehicles && <option value="">Loading vehicles…</option>}{!loadingVehicles && vehicles.length === 0 && <option value="">No vehicles available</option>}{vehicles.map((item) => <option value={String(item.id)} key={item.id}>{item.registrationNumber || `Vehicle ${item.id}`} · {item.make || ''} {item.model || ''}</option>)}</select></div></section>
+    <GpsSimulator vehicleId={selectedId} onSample={(sample) => { setLatest(sample); setHistory((current) => [sample, ...current.filter((item) => item.id !== sample.id)].slice(0, 100)); setError(''); }} />
     {error && <div className="inline-notice"><Activity size={17} /><div><strong>Telemetry unavailable</strong><span>{error}</span></div></div>}
     <section className="tracking-grid">
       <article className="panel map-panel"><div className="panel-header"><div><span className="eyebrow">LAST KNOWN POSITION</span><h2>{vehicle?.registrationNumber || (selectedId ? `Vehicle ${selectedId}` : 'Vehicle position')}</h2></div>{latest && <StatusPill value={latest.ignitionStatus ? 'ONLINE' : 'OFFLINE'} />}</div>
@@ -72,6 +74,6 @@ export default function TrackingPage() {
     <section className="panel"><div className="panel-header"><div><span className="eyebrow">RECENT SAMPLES</span><h2>Telemetry history</h2></div><span className="table-subtle-count">{history.length} records</span></div>
       {loadingTelemetry ? <div className="table-loading"><LoaderCircle className="spin" size={22} /><span>Loading readings…</span></div> : history.length === 0 ? <div className="empty-state compact"><div className="empty-icon"><Activity size={21} /></div><strong>No telemetry history</strong><span>Telemetry records will appear here after devices or API clients submit readings.</span></div> : <div className="table-wrap"><table><thead><tr><th>Recorded at</th><th>Latitude</th><th>Longitude</th><th>Speed</th><th>Mileage</th><th>Fuel</th><th>Ignition</th></tr></thead><tbody>{history.slice(0, 20).map((item) => <tr key={item.id}><td className="date-cell">{dateText(item.recordedAt)}</td><td>{item.latitude}</td><td>{item.longitude}</td><td>{item.speedKmh ?? '—'} km/h</td><td>{item.mileage ?? '—'} km</td><td>{item.fuelLevelPercent == null ? '—' : `${item.fuelLevelPercent}%`}</td><td><StatusPill value={item.ignitionStatus ? 'ON' : 'OFF'} /></td></tr>)}</tbody></table></div>}
     </section>
-    <p className="data-note">Tracking displays the latest records received by the API. It does not simulate GPS data or imply continuous real-time device streaming.</p>
+    <p className="data-note">Tracking refreshes stored telemetry automatically. The development simulator sends synthetic Johannesburg coordinates only; it is not a real GPS signal or physical-tracker integration.</p>
   </div>;
 }
