@@ -104,6 +104,7 @@ export const resourceConfig = {
       { key: 'longitude', label: 'Longitude' }, { key: 'radiusMeters', label: 'Radius (m)' }, { key: 'status', label: 'Status', type: 'status' },
     ],
     fields: [
+      field('vehicleId', 'Centre location from vehicle', 'relation', { required: true, createOnly: true, optionsEndpoint: '/vehicles', labelFields: ['registrationNumber', 'fleetNumber', 'make', 'model'] }),
       field('name', 'Name', 'text', { required: true }), field('description', 'Description'),
       field('radiusMeters', 'Radius (metres)', 'number', { required: true, min: 0.01, step: 'any' }),
       field('status', 'Status', 'select', { options: ['ACTIVE', 'INACTIVE'], defaultValue: 'ACTIVE' }),
