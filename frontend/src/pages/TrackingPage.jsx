@@ -32,9 +32,10 @@ export default function TrackingPage() {
     }).catch((err) => setError(err.message)).finally(() => setLoadingVehicles(false));
   }, []);
 
-  const loadTelemetry = useCallback(async () => {
+  const loadTelemetry = useCallback(async (silent = false) => {
     if (!selectedId) { setLatest(null); setHistory([]); return; }
-    setLoadingTelemetry(true); setError('');
+    if (!silent) setLoadingTelemetry(true);
+    setError('');
     const results = await Promise.allSettled([
       apiRequest(`/telemetry/vehicle/${selectedId}/latest`),
       apiRequest(`/telemetry/vehicle/${selectedId}`),
@@ -44,7 +45,7 @@ export default function TrackingPage() {
     if (results[1].status === 'fulfilled') setHistory(Array.isArray(results[1].value) ? results[1].value : []);
     else setHistory([]);
     if (results[0].status === 'rejected' && results[1].status === 'rejected') setError('No telemetry is available for this vehicle yet, or the telemetry endpoints are unavailable.');
-    setLoadingTelemetry(false);
+    if (!silent) setLoadingTelemetry(false);
   }, [selectedId]);
   useEffect(() => {
     if (!selectedId) return undefined;
