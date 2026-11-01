@@ -14,7 +14,7 @@ export const resourceConfig = {
     ],
     fields: [
       field('registrationNumber', 'Registration number', 'text', { required: true }),
-      field('vin', 'VIN / chassis number'), field('make', 'Make', 'text', { required: true }), field('model', 'Model', 'text', { required: true }),
+      field('vin', 'VIN / chassis number', 'text', { maxLength: 17 }), field('make', 'Make', 'text', { required: true }), field('model', 'Model', 'text', { required: true }),
       field('vehicleYear', 'Vehicle year', 'number', { min: 1900, max: 2100 }),
       field('vehicleType', 'Vehicle type', 'select', { required: true, options: ['TRUCK', 'VAN', 'CAR', 'BUS', 'TRAILER', 'OTHER'], defaultValue: 'TRUCK' }),
       field('fuelType', 'Fuel type', 'select', { required: true, options: ['DIESEL', 'PETROL', 'ELECTRIC', 'HYBRID', 'OTHER'], defaultValue: 'DIESEL' }),
@@ -31,7 +31,7 @@ export const resourceConfig = {
       { key: 'email', label: 'Email' }, { key: 'licenceNumber', label: 'Licence number' }, { key: 'status', label: 'Status', type: 'status' },
     ],
     fields: [
-      field('employeeNumber', 'Employee number', 'text', { required: true }), field('firstName', 'First name', 'text', { required: true }),
+      field('firstName', 'First name', 'text', { required: true }),
       field('lastName', 'Last name', 'text', { required: true }), field('email', 'Email', 'email'), field('phone', 'Phone number', 'tel'),
       field('licenceNumber', 'Licence number'), field('licenceExpiryDate', 'Licence expiry date', 'date'),
       field('status', 'Driver status', 'select', activeStatus),
@@ -74,8 +74,7 @@ export const resourceConfig = {
       field('vehicleId', 'Vehicle', 'relation', { required: true, optionsEndpoint: '/vehicles', labelFields: ['registrationNumber', 'fleetNumber', 'make', 'model'] }), field('driverId', 'Driver (optional)', 'relation', { optionsEndpoint: '/drivers', labelFields: ['firstName', 'lastName', 'employeeNumber'], emptyLabel: 'No driver selected' }),
       field('alertType', 'Alert type', 'text', { required: true, placeholder: 'e.g. SPEEDING' }),
       field('severity', 'Severity', 'select', { options: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'], defaultValue: 'MEDIUM' }),
-      field('description', 'Description', 'textarea', { required: true, full: true }), field('latitude', 'Latitude', 'number', { min: -90, max: 90, step: 'any' }),
-      field('longitude', 'Longitude', 'number', { min: -180, max: 180, step: 'any' }),
+      field('description', 'Description', 'textarea', { required: true, full: true }),
     ],
     actions: [
       { label: 'Acknowledge', method: 'POST', path: row => `/alerts/${row.id}/acknowledge`, roles: ['ADMIN', 'FLEET_MANAGER', 'DISPATCHER'], when: row => String(row.status || '').toUpperCase() === 'OPEN', variant: 'secondary' },
