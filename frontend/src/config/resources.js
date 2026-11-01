@@ -105,8 +105,6 @@ export const resourceConfig = {
     ],
     fields: [
       field('name', 'Name', 'text', { required: true }), field('description', 'Description'),
-      field('latitude', 'Latitude', 'number', { required: true, min: -90, max: 90, step: 'any' }),
-      field('longitude', 'Longitude', 'number', { required: true, min: -180, max: 180, step: 'any' }),
       field('radiusMeters', 'Radius (metres)', 'number', { required: true, min: 0.01, step: 'any' }),
       field('status', 'Status', 'select', { options: ['ACTIVE', 'INACTIVE'], defaultValue: 'ACTIVE' }),
     ],
