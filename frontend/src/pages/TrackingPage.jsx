@@ -41,7 +41,12 @@ export default function TrackingPage() {
     if (results[0].status === 'rejected' && results[1].status === 'rejected') setError('No telemetry is available for this vehicle yet, or the telemetry endpoints are unavailable.');
     setLoadingTelemetry(false);
   }, [selectedId]);
-  useEffect(() => { if (selectedId) loadTelemetry(); }, [selectedId, loadTelemetry]);
+  useEffect(() => {
+    if (!selectedId) return undefined;
+    loadTelemetry();
+    const timer = window.setInterval(() => loadTelemetry(true), 10000);
+    return () => window.clearInterval(timer);
+  }, [selectedId, loadTelemetry]);
 
   const vehicle = vehicles.find((item) => String(item.id) === selectedId);
   const lat = Number(latest?.latitude);
