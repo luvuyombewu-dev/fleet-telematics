@@ -15,9 +15,11 @@ import za.co.fleettelematics.repository.GeofenceRepository;
 @Transactional
 public class GeofenceService {
     private final GeofenceRepository geofenceRepository;
+    private final VehicleLocationService vehicleLocationService;
 
-    public GeofenceService(GeofenceRepository geofenceRepository) {
+    public GeofenceService(GeofenceRepository geofenceRepository, VehicleLocationService vehicleLocationService) {
         this.geofenceRepository = geofenceRepository;
+        this.vehicleLocationService = vehicleLocationService;
     }
 
     @Transactional(readOnly = true)
@@ -30,6 +32,9 @@ public class GeofenceService {
     public GeofenceResponse findById(Long id) { return toResponse(getEntity(id)); }
 
     public GeofenceResponse create(GeofenceRequest request) {
+        if (request.getVehicleId() == null) {
+            throw new IllegalArgumentException("Select a vehicle to use its latest saved GPS position as the geofence centre.");
+        }
         Geofence geofence = new Geofence();
         apply(geofence, request);
         return toResponse(geofenceRepository.save(geofence));
@@ -50,8 +55,12 @@ public class GeofenceService {
     private void apply(Geofence geofence, GeofenceRequest request) {
         geofence.setName(request.getName());
         geofence.setDescription(request.getDescription());
-        geofence.setLatitude(request.getLatitude());
-        geofence.setLongitude(request.getLongitude());
+        // Centre coordinates are taken from saved telemetry, never typed into the form.
+        if (request.getVehicleId() != null) {
+            VehicleLocationService.Position position = vehicleLocationService.requireLatestPosition(request.getVehicleId());
+            geofence.setLatitude(position.latitude());
+            geofence.setLongitude(position.longitude());
+        }
         geofence.setRadiusMeters(request.getRadiusMeters());
         if (request.getStatus() != null) geofence.setStatus(request.getStatus());
     }
