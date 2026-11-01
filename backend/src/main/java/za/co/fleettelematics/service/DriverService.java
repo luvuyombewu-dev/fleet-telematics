@@ -1,6 +1,7 @@
 package za.co.fleettelematics.service;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,17 +34,40 @@ public class DriverService {
     public DriverResponse create(DriverRequest request) {
         Driver driver = new Driver();
         apply(driver, request);
-        return toResponse(driverRepository.save(driver));
+        driver.setEmployeeNumber(generateTemporaryEmployeeNumber());
+
+        Driver saved = driverRepository.saveAndFlush(driver);
+        saved.setEmployeeNumber(generateEmployeeNumber(saved.getId()));
+        return toResponse(driverRepository.saveAndFlush(saved));
     }
 
     public DriverResponse update(Long id, DriverRequest request) {
         Driver driver = getEntity(id);
         apply(driver, request);
+        // Employee numbers are immutable system identifiers and are never changed by PUT.
         return toResponse(driverRepository.save(driver));
     }
 
     public void delete(Long id) {
         driverRepository.delete(getEntity(id));
+    }
+
+    private String generateEmployeeNumber(Long id) {
+        String base = String.format("EMP-%03d", id);
+        String candidate = base;
+        int suffix = 1;
+        while (driverRepository.findByEmployeeNumber(candidate).isPresent()) {
+            candidate = base + "-" + suffix++;
+        }
+        return candidate;
+    }
+
+    private String generateTemporaryEmployeeNumber() {
+        String candidate;
+        do {
+            candidate = "TMP-EMP-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        } while (driverRepository.findByEmployeeNumber(candidate).isPresent());
+        return candidate;
     }
 
     private Driver getEntity(Long id) {
@@ -52,7 +76,6 @@ public class DriverService {
     }
 
     private void apply(Driver driver, DriverRequest request) {
-        driver.setEmployeeNumber(request.getEmployeeNumber());
         driver.setFirstName(request.getFirstName());
         driver.setLastName(request.getLastName());
         driver.setEmail(request.getEmail());
