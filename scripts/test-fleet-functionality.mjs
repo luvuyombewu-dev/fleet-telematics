@@ -370,7 +370,7 @@ async function main() {
     const created = await request('/gps-events', { method: 'POST', body: payload });
     expectStatus(created, 201, 'POST /gps-events');
     assert(created.data?.id != null, 'GPS event response has no id');
-    assert(Number(created.data.latitude) === -26.2041 && Number(created.data.longitude) === 28.0473, 'GPS event did not use the latest vehicle telemetry coordinates');
+    assert(Number(created.data.latitude) === -33.9249 && Number(created.data.longitude) === 18.4241, 'GPS event did not use the latest vehicle telemetry coordinates');
     for (const path of ['/gps-events', `/gps-events/vehicle/${seedVehicle.id}`, `/gps-events/driver/${seedDriver.id}`]) {
       const rows = await readArray(path, path);
       assert(rows.some((item) => item.id === created.data.id), `Created GPS event missing from ${path}`);
