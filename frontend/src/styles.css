@@ -2347,6 +2347,7 @@
    
    .side-nav::-webkit-scrollbar-corner {
      background: transparent;
+}
 
 /* --------------------------------------------------------------------------
    18. User-tuned colour overrides (deduplicated)
