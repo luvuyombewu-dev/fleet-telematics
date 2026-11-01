@@ -36,6 +36,7 @@ function ModalField({ field, value, onChange, options = [], optionsLoading = fal
     placeholder: field.placeholder || `Enter ${field.label.toLowerCase()}`,
     min: field.min,
     max: field.max,
+    maxLength: field.maxLength,
     step: field.step,
     minLength: field.minLength,
     autoComplete: field.type === 'password' ? 'new-password' : undefined,
