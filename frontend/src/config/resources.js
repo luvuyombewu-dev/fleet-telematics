@@ -163,7 +163,7 @@ export const navigation = [
     { label: 'Geofences', path: '/geofences', icon: MapPin },
   ] },
   { group: 'Administration', items: [
-    { label: 'Users', path: '/users', icon: UserCog, roles: ['ADMIN'] },
+    { label: 'User management', path: '/users', icon: UserCog },
     { label: 'Audit logs', path: '/audit-logs', icon: FileClock, roles: ['ADMIN', 'MANAGEMENT'] },
   ] },
 ];
