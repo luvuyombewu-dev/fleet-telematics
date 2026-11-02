@@ -120,8 +120,6 @@ export const resourceConfig = {
     fields: [
       field('vehicleId', 'Vehicle', 'relation', { required: true, optionsEndpoint: '/vehicles', labelFields: ['registrationNumber', 'fleetNumber', 'make', 'model'] }), field('driverId', 'Driver (optional)', 'relation', { optionsEndpoint: '/drivers', labelFields: ['firstName', 'lastName', 'employeeNumber'], emptyLabel: 'No driver selected' }),
       field('eventType', 'Event type', 'text', { required: true, placeholder: 'e.g. IGNITION_ON' }),
-      field('latitude', 'Latitude', 'number', { required: true, min: -90, max: 90, step: 'any' }),
-      field('longitude', 'Longitude', 'number', { required: true, min: -180, max: 180, step: 'any' }),
       field('recordedAt', 'Recorded at', 'datetime-local'), field('metadata', 'Metadata (JSON)', 'textarea', { full: true, placeholder: '{"source":"manual"}' }),
     ],
   },
