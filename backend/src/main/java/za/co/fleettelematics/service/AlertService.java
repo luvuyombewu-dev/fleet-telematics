@@ -22,12 +22,14 @@ public class AlertService {
     private final AlertRepository alertRepository;
     private final VehicleRepository vehicleRepository;
     private final DriverRepository driverRepository;
+    private final VehicleLocationService vehicleLocationService;
 
     public AlertService(AlertRepository alertRepository, VehicleRepository vehicleRepository,
-                        DriverRepository driverRepository) {
+                        DriverRepository driverRepository, VehicleLocationService vehicleLocationService) {
         this.alertRepository = alertRepository;
         this.vehicleRepository = vehicleRepository;
         this.driverRepository = driverRepository;
+        this.vehicleLocationService = vehicleLocationService;
     }
 
     @Transactional(readOnly = true)
@@ -45,13 +47,13 @@ public class AlertService {
 
     public AlertResponse create(AlertRequest request) {
         Alert alert = new Alert();
-        apply(alert, request);
+        apply(alert, request, true);
         return toResponse(alertRepository.save(alert));
     }
 
     public AlertResponse update(Long id, AlertRequest request) {
         Alert alert = getEntity(id);
-        apply(alert, request);
+        apply(alert, request, false);
         return toResponse(alertRepository.save(alert));
     }
 
@@ -77,18 +79,32 @@ public class AlertService {
         return alertRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Alert", id));
     }
 
-    private void apply(Alert alert, AlertRequest request) {
+    private void apply(Alert alert, AlertRequest request, boolean creating) {
         Vehicle vehicle = vehicleRepository.findById(request.getVehicleId())
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", request.getVehicleId()));
         Driver driver = request.getDriverId() == null ? null : driverRepository.findById(request.getDriverId())
                 .orElseThrow(() -> new ResourceNotFoundException("Driver", request.getDriverId()));
+        boolean vehicleChanged = alert.getVehicle() == null
+                || !alert.getVehicle().getId().equals(vehicle.getId());
+
         alert.setVehicle(vehicle);
         alert.setDriver(driver);
         alert.setAlertType(request.getAlertType());
         if (request.getSeverity() != null) alert.setSeverity(request.getSeverity());
         alert.setDescription(request.getDescription());
-        alert.setLatitude(request.getLatitude());
-        alert.setLongitude(request.getLongitude());
+
+        if ((request.getLatitude() == null) != (request.getLongitude() == null)) {
+            throw new IllegalArgumentException("Latitude and longitude must either both be supplied or both be omitted.");
+        }
+        if (request.getLatitude() != null) {
+            alert.setLatitude(request.getLatitude());
+            alert.setLongitude(request.getLongitude());
+        } else if (creating || vehicleChanged) {
+            VehicleLocationService.Position position =
+                    vehicleLocationService.findLatestPosition(vehicle.getId()).orElse(null);
+            alert.setLatitude(position == null ? null : position.latitude());
+            alert.setLongitude(position == null ? null : position.longitude());
+        }
         if (request.getStatus() != null) alert.setStatus(request.getStatus());
     }
 

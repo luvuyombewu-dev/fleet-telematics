@@ -10,14 +10,15 @@ public class GeofenceRequest {
 
     @NotBlank
     private String name;
+
+    @jakarta.validation.constraints.Positive
+    private Long vehicleId;
     private String description;
 
-    @NotNull
     @DecimalMin("-90.0")
     @DecimalMax("90.0")
     private BigDecimal latitude;
 
-    @NotNull
     @DecimalMin("-180.0")
     @DecimalMax("180.0")
     private BigDecimal longitude;
@@ -28,6 +29,8 @@ public class GeofenceRequest {
 
     private String status;
 
+    public Long getVehicleId() { return vehicleId; }
+    public void setVehicleId(Long vehicleId) { this.vehicleId = vehicleId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }
